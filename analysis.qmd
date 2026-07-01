@@ -1,6 +1,55 @@
 ---
-title: "Analyzing US Births and Basketball Recruits"
+title: "NBA Recruits"
 author: Ethan
 format: html
 ---
 
+```{r}
+#| cache: true
+library(readxl)
+library(dplyr)
+
+basketball_tibble <- read_excel("data/nba_recruits.xlsx") |>
+  mutate(
+    tier = factor(
+      tier,
+      levels = c("Never played", "Brief career", "Solid career", "All-Star level", "Superstar"),
+      ordered = TRUE
+    ),
+    recruit_group = factor(
+      recruit_group,
+      levels = c("#1–10", "#11–25", "#26–50", "#51–100", "Outside top 100"),
+      ordered = TRUE
+    )
+  )
+
+basketball_tibble
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+
+plot_data <- basketball_tibble |>
+  filter(!is.na(rank), !is.na(top_mean_wa))
+
+highlight_names <- c("LeBron James", "Kevin Durant", "Stephen Curry", "Giannis Antetokounmpo", "Kawhi Leonard", "Nikola Jokic")
+
+plot_data |>
+  ggplot(aes(x = rank, y = top_mean_wa, color = tier)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "grey40") +
+  geom_text(
+    data = plot_data |> filter(name %in% highlight_names),
+    aes(label = name),
+    vjust = -0.6,
+    check_overlap = FALSE
+  ) +
+  labs(
+    title = "Recruit rank vs. top mean win shares above replacement",
+    x = "Recruit rank",
+    y = "Top mean win shares above replacement",
+    color = "Career tier"
+  ) +
+  theme_minimal()
+```
